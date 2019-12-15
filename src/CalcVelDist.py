@@ -65,7 +65,7 @@ v_e = np.sqrt(2.0)*sigmav
 # v_e = np.sqrt(2.0)*MB.sigmav
 # vesc = MB.vesc
 
-N_gamma = 3
+N_gamma = 11
 
 VMAX = 1000 #km/s
 VMIN = 1 #km/s
