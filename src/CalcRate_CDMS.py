@@ -2,8 +2,8 @@ import numpy as np
 from numpy import pi
 from scipy.integrate import simps,quad
 import verne
-from LabFuncs import *
-import utils
+from .LabFuncs import *
+from . import utils
 from scipy.special import erf
 from scipy.interpolate import interp1d
 import MaxwellBoltzmann as MB
@@ -99,17 +99,17 @@ def Nevents(E_min, E_max, m_x, sig, gamma_ind = 10):
 
 #Calculate number of events as a function of gamma
 Ne_list = np.zeros(11)
-print "gamma    Ne"
+print("gamma    Ne")
 for i in range(11):
     #We integrate from 1 -> 110 keV because the efficiency function takes care of the thresholds...
     Ne_list[i] = Nevents(1.0, 110.0, m_x, sigma_p, gamma_ind=i)*exposure
-    print i*np.pi/10.0, Ne_list[i]
+    print( i*np.pi/10.0, Ne_list[i])
 
 Ne_interp = interp1d(np.linspace(0, 1,11)*np.pi, Ne_list)
 
 #Integrate over the values of gamma for a single day
 Ne_tot =  simps(Ne_interp(gammavals), tvals-t0)
-print "Total number of events:", Ne_tot
+print( "Total number of events:", Ne_tot)
 
 #Append to number of events file
 fname = "../results/Nevents/N_SUF_lmx" + '{0:.1f}'.format(np.log10(m_x)) + ".txt"

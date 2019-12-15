@@ -34,8 +34,8 @@ def loadPhiInterp():
         z = data.reshape((xlen,ylen))
 
     else:
-        print "    File '../data/PhiIntegrals.dat' doesn't exist..."
-        print "    Calculating from scratch..."
+        print( "    File '../data/PhiIntegrals.dat' doesn't exist...")
+        print( "    Calculating from scratch...")
         z = np.zeros((xlen, ylen))
         for i,x in enumerate(xvals):
             for j,phi in enumerate(phivals):

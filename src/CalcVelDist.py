@@ -27,13 +27,13 @@ elif (loc == "EDE"):
 target = loc
 
 
-print "   "
-print "    Calculating for..."
-print "        m_x/GeV:", m_x
-print "        sigma_p/cm^2:", sigma_p
-#print "        gamma/pi:", gamma_by_pi
-print "        detector at :", loc
-print " "
+print( "   ")
+print( "    Calculating for...")
+print( "        m_x/GeV:", m_x)
+print( "        sigma_p/cm^2:", sigma_p)
+# #print "        gamma/pi:", gamma_by_pi)
+print( "        detector at :", loc)
+print( " ")
 
 #Initialise verne
 verne.loadIsotopes()
@@ -50,7 +50,7 @@ vesc = MB.vesc
 
 def getVelDist(gamma):
     
-    print "        Calculating maximum final speed..."
+    print( "        Calculating maximum final speed...")
     a = 1.0
     b = 2*v_e*(-np.sin(gamma)*np.sin(np.pi-thetavals) + np.cos(gamma)*np.cos(np.pi-thetavals))
     c = v_e**2 - vesc**2
@@ -67,7 +67,7 @@ def getVelDist(gamma):
         return np.linspace(0, 1, 61), np.zeros(61)
     vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False, fill_value=0)
     
-    print "        Calculating final speed distribution..."
+    print( "        Calculating final speed distribution...")
 
     #Tabulate values of speed distribution
     v_th = 1.0 #Lowest speed to consider (don't go lower than 1 km/s, other the calculation of derivatives is messed up...)
@@ -95,7 +95,7 @@ gamma_list = np.linspace(0, 1.0, N_gamma)
 vgrid = np.zeros((N_gamma, Nv))
 fgrid = np.zeros((N_gamma, Nv))
 for j in range(N_gamma):
-    print "    Calculating for gamma/pi = ", gamma_list[j],"..."
+    print( "    Calculating for gamma/pi = ", gamma_list[j],"...")
     vgrid[j,:], fgrid[j,:] = getVelDist(gamma_list[j]*np.pi)
 
 gamma_rep = np.repeat(gamma_list, Nv)

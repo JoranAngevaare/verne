@@ -36,7 +36,7 @@ for i, lmstring in enumerate(lmlist):
 
     lsig_limit = lsig_interp(np.log10(N_lim))
 
-    print lmstring, lsig_limit
+    print(lmstring, lsig_limit)
 
     masses[i] = 10**float(lmstring)
     limits[i] = 10**lsig_limit

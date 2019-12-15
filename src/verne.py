@@ -23,9 +23,9 @@ import MaxwellBoltzmann as MB
 #Distances in m
 #--------------------
 
-print "*********************************************"
-print "WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED..."
-print "*********************************************"
+print( "*********************************************")
+print( "WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
+print( "*********************************************")
 
 isotopes = None
 dens_profiles = None
@@ -42,10 +42,10 @@ corr_Cu = None
 NEGLECT_FF = False
 
 if (NEGLECT_FF):
-    print " "
-    print "*********************************************"
-    print "WARNING: NEGLECTING FORM FACTORS..."
-    print "*********************************************"
+    print (" ")
+    print ("*********************************************")
+    print ("WARNING: NEGLECTING FORM FACTORS...")
+    print ("*********************************************")
     
 
 isoID = {"O":0, "Si":1, "Mg":2, "Fe":3, "Ca":4, "Na":5, "S":6, "Al":7, "O_A":8, "N_A": 9}
@@ -54,7 +54,7 @@ h_A = 80e3  #Height of atmosphere in (m)
 R_E = 6371.0e3  #Earth Radius in (m)
 
 def loadIsotopes():
-    print "    Loading isotope data and density profiles..."
+    print( "    Loading isotope data and density profiles...")
     
     global dens_profiles
     global isotopes
@@ -120,7 +120,7 @@ def loadFFcorrections(m_x):
     if (Avals is None):
         loadIsotopes()
     
-    print "    Calculating Form Factor corrections for m_x = ", m_x, " GeV..."
+    print( "    Calculating Form Factor corrections for m_x = ", m_x, " GeV...")
     corr_interp = [calcFFcorrection(m_x, Avals[ID]) for ID in range(Niso_full)]
     #Also need Lead + Copper, for the shielding
     corr_Pb = calcFFcorrection(m_x, 207) 
