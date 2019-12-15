@@ -7,12 +7,12 @@ Contact: Bradley Kavanagh, bradkav@gmail.com
 
 """
 
+
 import numpy as np
 from scipy.integrate import quad, simps
 from scipy.interpolate import interp1d, interp2d
 from scipy.integrate import odeint
 import scipy.special
-
 import MaxwellBoltzmann as MB
 
 #--------------------
@@ -26,6 +26,14 @@ import MaxwellBoltzmann as MB
 print( "*********************************************")
 print( "WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
 print( "*********************************************")
+
+## Integrate options
+MXSTEPS = 15
+RTOL = 1.e-2
+
+# MXSTEPS=1000, RTOL=1e-6
+print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
+
 
 isotopes = None
 dens_profiles = None
@@ -53,7 +61,7 @@ isoID = {"O":0, "Si":1, "Mg":2, "Fe":3, "Ca":4, "Na":5, "S":6, "Al":7, "O_A":8, 
 h_A = 80e3  #Height of atmosphere in (m)
 R_E = 6371.0e3  #Earth Radius in (m)
 
-def loadIsotopes():
+def loadIsotopes(path = '.'):
     print( "    Loading isotope data and density profiles...")
     
     global dens_profiles
@@ -63,7 +71,7 @@ def loadIsotopes():
     global Niso
     global Niso_full
     
-    rootdir = "../data/"
+    rootdir = path + "/../data/"
     
     #Load in Earth isotopes
     Avals = np.loadtxt(rootdir+"isotopes.txt", usecols=(1,)) 
@@ -111,14 +119,14 @@ def loadIsotopes():
     dens_interp = [interp1d(r_list, dens, bounds_error=False, fill_value = 0) for dens in dens_profiles]
     
 #Generate interpolation functions for the Form Factor corrections (C_i(v))
-def loadFFcorrections(m_x):
+def loadFFcorrections(m_x, path = '.'):
     global corr_interp
     global corr_Pb
     global corr_Cu
     
     #Check that the isotope list has been loaded
     if (Avals is None):
-        loadIsotopes()
+        loadIsotopes(path)
     
     print( "    Calculating Form Factor corrections for m_x = ", m_x, " GeV...")
     corr_interp = [calcFFcorrection(m_x, Avals[ID]) for ID in range(Niso_full)]
@@ -294,7 +302,7 @@ def dv_by_dD(v, D, params):
     #Loop over the relevant isotopes
     #BJK!
     for i in isovals:
-        res += dens_interp[i](r)*effectiveXS(sigma_p, m_x, Avals[i],v=v)*corr_interp[i](v)
+        res += dens_interp[i](r)*effectiveXS(sigma_p, m_x, Avals[i], v=v)*corr_interp[i](v)
     return -1e2*v*res #(km/s)/m
 
 #Derivative for the case of Pb shielding
@@ -332,7 +340,7 @@ def calcVfinal(vi, theta,  depth, sigma_p, m_x, target="full"):
         d1 = pathLength(depth, theta) - pathLength_Earth(depth, theta)
         d2 = pathLength(depth, theta)
     
-    psoln = odeint(dv_by_dD, vi, [d1,d2] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD, vi, [d1,d2] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     vf = psoln[1]
     return vf
     
@@ -341,6 +349,9 @@ def calcVfinal(vi, theta,  depth, sigma_p, m_x, target="full"):
 #Recommend using target="MPI" or "SUF" depending on the detector
 def calcVfinal_full(vi, theta,  depth, sigma_p, m_x, target="full"):
     vf = 1.0*vi
+    if (target) == "XENON":
+        # No need to calculate any other contribution that the earth shielding effect at 1400m depth
+        return calcVfinal(vf, theta,  depth, sigma_p, m_x, target="earth")
     if (target in ["atmos", "full", "no_shield", "SUF", "MPI", "EDE"]):
         vf = calcVfinal(vf, theta,  depth, sigma_p, m_x, target="atmos")
     if (target in ["earth", "full", "no_shield", "SUF", "MPI", "EDE"]):
@@ -368,7 +379,7 @@ def calcVinitial(vf, theta,  depth, sigma_p, m_x, target="earth"):
         d1 = pathLength(depth, theta) - pathLength_Earth(depth, theta)
         d2 = pathLength(depth, theta)
     
-    psoln = odeint(dv_by_dD, vf, [d2,d1], args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD, vf, [d2,d1], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
     
 #Calculate the initial speed at the top of the atmosphere for a 
@@ -376,15 +387,18 @@ def calcVinitial(vf, theta,  depth, sigma_p, m_x, target="earth"):
 #Recommend using target="MPI" or "SUF" depending on the detector
 def calcVinitial_full(vf, theta,  depth, sigma_p, m_x, target="full"):
     vi = 1.0*vf
+    if (target) == "XENON":
+        # No need to calculate any other contribution that the earth shielding effect at 1400m depth
+        return calcVinitial(vi, theta,  depth, sigma_p, m_x, target="earth")
     if (target == "MPI"):
         vi = calcVinitial_shield_MPI(vi, sigma_p, m_x)
     if (target == "SUF"):
         vi = calcVinitial_shield_SUF(vi, sigma_p, m_x)
     if (target == "EDE"):
         vi = calcVinitial_shield_EDE(vi, sigma_p, m_x)
-    if (target in ["earth", "full", "no_shield", "SUF", "MPI", "EDE"]):
+    if (target in ["earth", "full", "no_shield", "SUF", "MPI", "EDE", "XENON"]):
         vi = calcVinitial(vi, theta,  depth, sigma_p, m_x, target="earth")
-    if (target in ["atmos", "full", "no_shield", "SUF", "MPI", "EDE"]):
+    if (target in ["atmos", "full", "no_shield", "SUF", "MPI", "EDE", "XENON"]):
         vi = calcVinitial(vi, theta,  depth, sigma_p, m_x, target="atmos")
 
     return vi
@@ -393,39 +407,37 @@ def calcVinitial_full(vf, theta,  depth, sigma_p, m_x, target="full"):
 def calcVfinal_shield_SUF(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 16cm of Lead
-    psoln = odeint(dv_by_dD_Pb, v0, [0,16.0e-2] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Pb, v0, [0,16.0e-2] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
     
 def calcVinitial_shield_SUF(v0,  sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 16cm of Lead (backwards)
-    psoln = odeint(dv_by_dD_Pb, v0, [16.0e-2,0] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Pb, v0, [16.0e-2,0] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
 #Calculate final (or initial) speed after crossing the Copper shielding at MPI
 def calcVfinal_shield_MPI(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 1mm Copper
-    psoln = odeint(dv_by_dD_Cu, v0, [0,1e-3] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Cu, v0, [0,1e-3] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
     
 def calcVinitial_shield_MPI(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 1mm Copper
-    psoln = odeint(dv_by_dD_Cu, v0, [1e-3,0] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Cu, v0, [1e-3,0] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
 #Calculate final (or initial) speed after crossing the Lead shielding at EDE...
 def calcVfinal_shield_EDE(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 16cm of Lead
-    psoln = odeint(dv_by_dD_Pb, v0, [0,10.0e-2] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Pb, v0, [0,10.0e-2] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
     
 def calcVinitial_shield_EDE(v0,  sigma_p, m_x):
     params = [sigma_p, m_x]
     #Propagate through 16cm of Lead (backwards)
-    psoln = odeint(dv_by_dD_Pb, v0, [10.0e-2,0] , args=(params,), mxstep=1000, rtol=1e-6)
+    psoln = odeint(dv_by_dD_Pb, v0, [10.0e-2,0] , args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
-
-    

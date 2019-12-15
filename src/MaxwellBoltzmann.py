@@ -9,21 +9,15 @@ phi_interp = None
 #------- Velocity distribution stuff----------
 #----------------------------------------------
 
-vesc = 533.0
-sigmav=156.0
 
-
-# Nesc - normalisation constant
-Nesc = (scipy.special.erf(vesc/(np.sqrt(2.0)*sigmav)) - np.sqrt(2.0/np.pi)*(vesc/sigmav)*np.exp(-vesc**2/(2.0*sigmav**2)))
-NNORM = Nesc*156.0**3*np.sqrt(2.0*np.pi)*2.0*np.pi
 
 #Load an interpolation function for the integral
 #of the Maxwell-Boltzmann velocity distribution
 #over phi
 #*This is called as soon as the module is loaded*
-def loadPhiInterp():
+def loadPhiInterp(path = '.'):
     global phi_interp
-    fname = "../data/PhiIntegrals.dat"
+    fname =path+"/../data/PhiIntegrals.dat"
     xvals = np.arange(-7, 7.001, 0.05)
     phivals = np.arange(0, np.pi+0.1, 0.05)
     xlen = len(xvals)
@@ -46,7 +40,6 @@ def loadPhiInterp():
     
     phi_interp = interp2d(xvals,phivals,z.T)
 
-loadPhiInterp()
 
 def IntegralOverPhi(x, phi_max):
     if (phi_max < 0):
@@ -114,3 +107,18 @@ def vmin(E, m_N, m_x):
     mu = (m_N2*m_x)/(m_N2+m_x)
     res =  3e5*np.sqrt((E/1e6)*(m_N2)/(2*mu*mu))
     return res
+
+
+vesc = None
+sigmav = None
+Nesc = None
+NNORM = None
+if __name__ == 'main':
+    loadPhiInterp()
+    vesc = 533.0
+    sigmav = 156.0
+
+    # Nesc - normalisation constant
+    Nesc = (scipy.special.erf(vesc / (np.sqrt(2.0) * sigmav)) - np.sqrt(2.0 / np.pi) * (vesc / sigmav) * np.exp(
+        -vesc ** 2 / (2.0 * sigmav ** 2)))
+    NNORM = Nesc * sigmav ** 3 * np.sqrt(2.0 * np.pi) * 2.0 * np.pi
