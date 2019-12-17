@@ -43,8 +43,8 @@ elif (loc == "XENON"):
 
 target = loc
 N_gamma = args.n_gamma
-if N_gamma != 11 and args.save_as != None:
-    args.save_as = 'tmp_' + args.save_as
+# if N_gamma != 11 and args.save_as != None:
+#     args.save_as = 'tmp_' + args.save_as
 
 
 print( "   ")
