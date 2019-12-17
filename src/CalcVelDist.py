@@ -145,7 +145,7 @@ gamma_rep = np.repeat(gamma_list, Nv)
 
 #Output to file
 # fname = results_dir + "veldists/f_" + loc + "_lmx" + '{0:.1f}'.format(np.log10(m_x)) + "_lsig" + '{0:.2f}'.format(np.log10(sigma_p)) + ".txt"
-fname = results_dir + "veldists/f_all_%s_%i_%i_%.1f_%.2f.txt"%(loc, args.v_0, args.v_esc, args.sigma_p, args.m_x)
+fname = results_dir + "veldists/f_all_%s_%i_%i_%.1f_%.2f.txt"%(loc, args.v_0, args.v_esc, np.log(args.sigma_p), args.m_x)
 # headertxt = "mx [GeV]: " + str(m_x) + "\nsigma_p [cm^2]: " + str(sigma_p) + "\ndepth [m]: " + str(depth) + "\nloc: " + target
 # headertxt += "\nColumns: gamma/pi, v [km/s], f(v, gamma) [s/km]"
 #
