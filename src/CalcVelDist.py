@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description='...')
 parser.add_argument('-m_x','--m_x', help='DM mass in GeV', type=float, default = 1e5)
 parser.add_argument('-v_0','--v_0', help='v_0 in km/s', type=float, default=230)
 parser.add_argument('-v_esc','--v_esc', help='v_esc in km/c', type=float, default=533)
+parser.add_argument('-n_gamma','--n_gamma', help='number of angles considered', type=int, default=11)
 parser.add_argument('-save_as', '--save_as', default = None,  help='name of csv file to save the averaged velocity-distribution', type=str)
 parser.add_argument('-sigma_p','--sigma_p', help='DM-nucleon cross section, sigma_p in cm^2', type=float, required=True)
 parser.add_argument('-loc','--location', help='Detector location to consider. `MPI` or `SUF`', type=str, required=True)
@@ -41,6 +42,9 @@ elif (loc == "XENON"):
     depth = 1400  # metres
 
 target = loc
+N_gamma = args.n_gamma
+if N_gamma != 11 and args.save_as != None:
+    args.save_as = 'tmp_' + args.save_as
 
 
 print( "   ")
@@ -49,6 +53,7 @@ print( "        m_x/GeV:", m_x)
 print( "        sigma_p/cm^2:", sigma_p)
 # #print "        gamma/pi:", gamma_by_pi)
 print( "        detector at :", loc)
+print(f'        considering {N_gamma} angles')
 print( " ")
 
 #Initialise verne
@@ -65,7 +70,7 @@ v_e = np.sqrt(2.0)*sigmav
 # v_e = np.sqrt(2.0)*MB.sigmav
 # vesc = MB.vesc
 
-N_gamma = 11
+
 
 VMAX = 1000 #km/s
 VMIN = 1 #km/s
