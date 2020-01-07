@@ -7,7 +7,7 @@ Contact: Bradley Kavanagh, bradkav@gmail.com
 
 """
 
-
+import numba
 import numpy as np
 from scipy.integrate import quad, simps
 from scipy.interpolate import interp1d, interp2d
@@ -29,7 +29,7 @@ print( "*********************************************")
 
 ## Integrate options
 MXSTEPS = 15
-RTOL = 1.e-2
+RTOL = 1.e-1
 
 # MXSTEPS=1000, RTOL=1e-6
 print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
@@ -169,6 +169,7 @@ def atmos_density(h, Hvals, Tvals, beta):
     
 #Path length [m], as measured from the top of the atmosphere to the detector 
 #(at 'depth' m underground)
+@numba.jit()
 def pathLength(depth, theta):
     r_det = R_E - depth
     return +np.cos(theta)*r_det + np.sqrt((-np.cos(theta)*r_det)**2 - (r_det**2 - (R_E+h_A)**2))
@@ -240,13 +241,13 @@ def effectiveXS(sigma_p, m_X, A, v = 1.0):
     
 
 #Calculate the final speed distribution at the detector
-def CalcF(vf, gamma, depth,sigma_p, m_x, target, vmax_interp):
+def CalcF(vf, gamma, depth, sigma_p, m_x, target, vmax_interp):
     
     #Define a grid of values for theta which we sample over
     #theta = pi/2 is often problematic, so we sample more densely there
-    tlist = np.linspace(0, np.pi, 101)
-    tlist = np.append(tlist, (np.pi/2)*(1 + np.logspace(-3, -0.01, 50)))
-    tlist = np.append(tlist, (np.pi/2)*(1 - np.logspace(-3, -0.01, 50)))
+    tlist = np.linspace(0, np.pi, 51)
+    tlist = np.append(tlist, (np.pi/2)*(1 + np.logspace(-3, -0.01, 25)))
+    tlist = np.append(tlist, (np.pi/2)*(1 - np.logspace(-3, -0.01, 25)))
     tlist = np.sort(tlist)
     
     fint = tlist*0.0
@@ -280,23 +281,31 @@ def f_integrand_full(vf, theta, gamma, depth, sigma_p, m_x, target):
 #   - theta, the angle of the trajectory
 #   - depth,the detector depth
 #   - D, the distance along the trajectory, starting at the top of the atmosphere
+# @numba.jit()
 def radius(D, theta, depth):
+    # print(type(D), type(theta), type(depth))
     r_det = R_E - depth 
     return np.sqrt((R_E+h_A)**2 + D**2 + 2*D*(r_det*np.cos(theta) - pathLength(depth, theta)))
 
 #Derivative of DM speed along path length D
 #To be used by the ODE integrator
+# @numba.jit(nopython = True)
 def dv_by_dD(v, D, params):
 
     theta, depth, sigma_p, m_x, target = params
     res = 0.0
+    isovals = []
     if (target == "atmos"):
-        isovals = [8,9]
+        isovals = [8, 9]
     elif (target == "earth"):
         isovals = range(Niso)
+        #for i in range(Niso):
+        #    isovals.append(i)
     else:
         isovals = range(Niso_full)
-    
+        # for i in range(Niso_full):
+        #     isovals.append(i)
+
     r = radius(D, theta, depth)
 
     #Loop over the relevant isotopes

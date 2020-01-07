@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='...')
 parser.add_argument('-m_x','--m_x', help='DM mass in GeV', type=float, default = 1e5)
 parser.add_argument('-v_0','--v_0', help='v_0 in km/s', type=float, default=230)
 parser.add_argument('-v_esc','--v_esc', help='v_esc in km/c', type=float, default=533)
-parser.add_argument('-n_gamma','--n_gamma', help='number of angles considered', type=int, default=11)
+parser.add_argument('-n_gamma','--n_gamma', help='number of angles considered', type=int, default=4)
 parser.add_argument('-save_as', '--save_as', default = None,  help='name of csv file to save the averaged velocity-distribution', type=str)
 parser.add_argument('-sigma_p','--sigma_p', help='DM-nucleon cross section, sigma_p in cm^2', type=float, required=True)
 parser.add_argument('-loc','--location', help='Detector location to consider. `MPI` or `SUF`', type=str, required=True)
@@ -103,7 +103,7 @@ def getVelDist(gamma):
     #Calculate interpolation function for max final speed
     vmax = np.max(v_final_max)
     if (vmax < 1.0):
-        return np.linspace(0, 1, 61), np.zeros(61)
+        return np.linspace(0, 1, 61), np.zeros(31)
     vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False, fill_value=0)
     
     print( "        Calculating final speed distribution...")
@@ -115,8 +115,9 @@ def getVelDist(gamma):
     # vlist = np.logspace(np.log10(v_th), np.log10(0.25*vmax), 20)    #20
     # vlist = np.append(vlist, np.linspace(0.15*vmax, 0.99*vmax, 40)) #40
     # TODO, I want the same spacing for all angles
-    vlist = np.logspace(np.log10(VMIN), np.log10(0.25 * VMAX), 20)  # 20
-    vlist = np.append(vlist, np.linspace(0.15*VMAX, 0.99*VMAX, 40)) #40
+    Nv_over_three = Nv//3
+    vlist = np.logspace(np.log10(VMIN), np.log10(0.25 * VMAX), Nv_over_three)  # 10
+    vlist = np.append(vlist, np.linspace(0.15*VMAX, 0.99*VMAX, Nv - Nv_over_three)) # 20
     vlist = np.sort(vlist)
     f_final = 0.0*vlist
     for i in range(len(vlist)):
@@ -130,7 +131,7 @@ def getVelDist(gamma):
     
     
 #Loop over gamma values
-Nv = 60
+Nv = 30
 gamma_list = np.linspace(0, 1.0, N_gamma)
 vgrid = np.zeros((N_gamma, Nv))
 fgrid = np.zeros((N_gamma, Nv))
