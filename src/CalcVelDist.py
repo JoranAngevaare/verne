@@ -103,7 +103,7 @@ def getVelDist(gamma):
     #Calculate interpolation function for max final speed
     vmax = np.max(v_final_max)
     if (vmax < 1.0):
-        return np.linspace(0, 1, 61), np.zeros(31)
+        return np.linspace(0, 1, Nv), np.zeros(Nv)
     vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False, fill_value=0)
     
     print( "        Calculating final speed distribution...")
