@@ -160,10 +160,10 @@ df = pd.DataFrame()
 df['gamma/pi'] = gamma_rep
 df['v_[km/s]'] = vgrid.flatten()
 df['f(v,gamma)_[s/km]'] = fgrid.flatten()
-try:
-    df.to_csv(fname[:-3] + 'csv', index=False)
-except:
-    pass
+# try:
+#     df.to_csv(fname[:-3] + 'csv', index=False)
+# except:
+#     pass
 
 if args.save_as is not None and type(args.save_as) == str:
     print(f'saving at {args.save_as}')
@@ -176,4 +176,5 @@ df_avg['f(v,gamma)_[s/km]'] = fgrid_average
 try:
     df_avg.to_csv(fname_avg, index=False)
 except:
+    # Presumably another instance is also saving the same spectrum or has done so.
     pass
