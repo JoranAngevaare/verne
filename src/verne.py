@@ -358,7 +358,7 @@ def calcVfinal(vi, theta,  depth, sigma_p, m_x, target="full"):
 #Recommend using target="MPI" or "SUF" depending on the detector
 def calcVfinal_full(vi, theta,  depth, sigma_p, m_x, target="full"):
     vf = 1.0*vi
-    if (target) == "XENON":
+    if (target == "XENON" or target == "SNOLAB"):
         # No need to calculate any other contribution that the earth shielding effect at 1400m depth
         return calcVfinal(vf, theta,  depth, sigma_p, m_x, target="earth")
     if (target in ["atmos", "full", "no_shield", "SUF", "MPI", "EDE"]):
@@ -396,7 +396,7 @@ def calcVinitial(vf, theta,  depth, sigma_p, m_x, target="earth"):
 #Recommend using target="MPI" or "SUF" depending on the detector
 def calcVinitial_full(vf, theta,  depth, sigma_p, m_x, target="full"):
     vi = 1.0*vf
-    if (target) == "XENON":
+    if (target == "XENON" or target == "SNOLAB"):
         # No need to calculate any other contribution that the earth shielding effect at 1400m depth
         return calcVinitial(vi, theta,  depth, sigma_p, m_x, target="earth")
     if (target == "MPI"):

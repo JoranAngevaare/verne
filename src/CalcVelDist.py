@@ -40,6 +40,8 @@ elif (loc == "EDE"):
     depth = 1.0 #metres
 elif (loc == "XENON"):
     depth = 1400  # metres
+elif (loc == "SNOLAB"):
+    depth = 2070
 
 target = loc
 N_gamma = args.n_gamma
