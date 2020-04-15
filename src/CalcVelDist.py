@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from scipy.interpolate import interp1d
 import argparse
@@ -175,8 +176,8 @@ else:
 df_avg = pd.DataFrame()
 df_avg['v_[km/s]'] = vgrid_average
 df_avg['f(v,gamma)_[s/km]'] = fgrid_average
-try:
-    df_avg.to_csv(fname_avg, index=False)
-except:
+if os.path.exists(fname_avg):
     # Presumably another instance is also saving the same spectrum or has done so.
-    pass
+    print(f'WARNING:\t{fname_avg} already exists!')
+else:
+    df_avg.to_csv(fname_avg, index=False)
