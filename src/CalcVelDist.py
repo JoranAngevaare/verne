@@ -183,9 +183,10 @@ if os.path.exists(fname_avg):
 else:
     try:
         df_avg.to_csv(fname_avg, index=False)
-    except OSError:
+    except OSError as e:
         print(f'WARNING:\tOSError while writing {fname_avg} on {time.asctime()}. Taking a nap of 10 minutes and re-trying!')
         print(f'was trying to save df of len(df) = {len(df_avg)}:\n{df_avg}')
+        print(f'The error:\n{e}')
         time.sleep(10 * 60)
         if os.path.exists(fname_avg):
             os.remove(fname_avg)
