@@ -181,30 +181,4 @@ if os.path.exists(fname_avg):
     # Presumably another instance is also saving the same spectrum or has done so.
     print(f'WARNING:\t{fname_avg} already exists!')
 else:
-    try:
-        df_avg.to_csv(fname_avg, index=False)
-    except OSError as e:
-        print(f'WARNING:\tOSError while writing {fname_avg} on {time.asctime()}. Taking a nap of 10 minutes and re-trying!')
-        print(f'was trying to save df of len(df) = {len(df_avg)}:\n{df_avg}')
-        print(f'The error:\n{e}')
-        time.sleep(10 * 60)
-        if os.path.exists(fname_avg):
-            os.remove(fname_avg)
-            df_avg.to_csv(fname_avg, index=False)
-def check_on_save():            
-    df_read = pd.read_csv(fname_avg)
-    return np.shape(df_read) == np.shape(df_avg)
-
-# assert that the write is correct
-if check_on_save():
-    print(f'Dataframe written succesfully')
-else:
-    print(f'ERROR in writing dataframe trying again in 5 minutes')
-    print(f'was trying to save df of len(df) = {len(df_avg)}:\n{df_avg}')
-    time.sleep(5 * 60)
-    if os.path.exists(fname_avg):
-        os.remove(fname_avg)
     df_avg.to_csv(fname_avg, index=False)
-    if not check_on_save():
-        print(f'FATAL ERROR while writing {fname_avg}, force killing job now')
-        sys.exit(-1)
