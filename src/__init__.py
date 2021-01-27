@@ -1,3 +1,5 @@
+__version__ = '0.0.0'
+
 from . import CalcLimits
 from . import CalcRate_CDMS
 from . import CalcRate_nucleus
