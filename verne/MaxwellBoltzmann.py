@@ -17,7 +17,7 @@ phi_interp = None
 # *This is called as soon as the module is loaded*
 def loadPhiInterp(path='.'):
     global phi_interp
-    fname = path + "/../data/PhiIntegrals.dat"
+    fname = os.path.join(path, "data/PhiIntegrals.dat")
     xvals = np.arange(-7, 7.001, 0.05)
     phivals = np.arange(0, np.pi + 0.1, 0.05)
     xlen = len(xvals)
