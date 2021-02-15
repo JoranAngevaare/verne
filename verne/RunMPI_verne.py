@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from mpi4py import MPI
 from subprocess import call
 import numpy as np
 
@@ -27,6 +26,7 @@ Flags:
 """
 
 if __name__ == '__main__':
+    from mpi4py import MPI
     # Parse the arguments!
     parser = argparse.ArgumentParser(description='...')
     parser.add_argument('-m_x', '--m_x', help='DM mass in GeV', type=float, default=1e5)
