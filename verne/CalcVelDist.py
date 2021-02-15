@@ -127,7 +127,7 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
 
     if save_as is not None and type(save_as) == str:
         print(f'saving at {save_as}')
-        fname_avg = save_as
+        fname_avg = os.path.abspath(save_as)
     else:
         raise ValueError
     df_avg = pd.DataFrame()

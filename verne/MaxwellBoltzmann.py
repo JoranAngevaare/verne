@@ -17,15 +17,15 @@ phi_interp = None
 # *This is called as soon as the module is loaded*
 def loadPhiInterp(path='.'):
     global phi_interp
-    fname = os.path.join(path, "data/PhiIntegrals.dat")
-    os.makedirs(os.path.join(path, 'data'), exist_ok=True)
+    fname = os.path.join(path, "..", "data", "PhiIntegrals.dat")
+    os.makedirs(os.path.join(path, "..", "data",), exist_ok=True)
 
     xvals = np.arange(-7, 7.001, 0.05)
     phivals = np.arange(0, np.pi + 0.1, 0.05)
     xlen = len(xvals)
     ylen = len(phivals)
     # print xlen, ylen
-    if (os.path.isfile(fname)):
+    if (os.path.exists(fname)):
         data = np.loadtxt(fname, usecols=(2,))
         z = data.reshape((xlen, ylen))
 
@@ -38,7 +38,7 @@ def loadPhiInterp(path='.'):
                 z[i, j] = quad(lambda y: np.exp(x * np.cos(y)), 0, phi)[0]
 
         xgrid, phigrid = np.meshgrid(xvals, phivals, indexing='ij')
-        np.savetxt(fname, zip(xgrid.flatten(), phigrid.flatten(), z.flatten()))
+        np.savetxt(fname, list(zip(xgrid.flatten(), phigrid.flatten(), z.flatten())))
 
     phi_interp = interp2d(xvals, phivals, z.T)
 
