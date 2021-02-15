@@ -19,7 +19,7 @@ The code will soon be updated with more detailed documentation and more examples
 
 ### Contents
 
-- `src`: Core of the `verne` code, including calculation scripts.
+- `verne`: Core of the `verne` code, including calculation scripts.
 - `data`: A collection of data tables (Earth element density profiles, etc.) which are read in by `verne`. 
 - `results`: Numerical results for the final speed distributions, numbers of signal events and constraints.
 - `plotting`: Scripts for generating plots from the results.
