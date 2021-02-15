@@ -9,7 +9,8 @@ import time
 from verne import MaxwellBoltzmann as MB
 import verne
 
-def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, sigmav, v_0, results_dir, save_as):
+
+def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
     path = verne.__path__[0]
     MB.loadPhiInterp(path)
 
@@ -25,6 +26,7 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, sigmav, v_0, results_di
         depth = 2070
 
     target = loc
+    sigmav = v_0 / np.sqrt(2.0)  # 156.0
 
     # if N_gamma != 11 and args.save_as != None:
     #     args.save_as = 'tmp_' + args.save_as
@@ -127,8 +129,7 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, sigmav, v_0, results_di
         print(f'saving at {save_as}')
         fname_avg = save_as
     else:
-        fname_avg = results_dir + "veldists/f_" + loc + "_lmx" + '{0:.1f}'.format(
-            np.log10(m_x)) + "_lsig" + '{0:.2f}'.format(np.log10(sigma_p)) + "_avg" + ".csv"
+        raise ValueError
     df_avg = pd.DataFrame()
     df_avg['v_[km/s]'] = vgrid_average
     df_avg['f(v,gamma)_[s/km]'] = fgrid_average
@@ -194,11 +195,9 @@ def main():
     loc = args.location
     N_gamma = args.n_gamma
     v_esc = args.v_esc  # 533.0
-    sigmav = args.v_0 / np.sqrt(2.0)  # 156.0
     v_0 = args.v_0
-    results_dir = os.path.join(verne.__path__[0], "/../results/")
     save_as = args.save_as
-    write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, sigmav, v_0, results_dir, save_as)
+    write_calcveldist(m_x, sigma_p, loc,v_esc, v_0, save_as, N_gamma=4)
 
 
 if __name__ == '__main__':
