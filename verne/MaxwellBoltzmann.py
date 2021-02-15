@@ -18,6 +18,8 @@ phi_interp = None
 def loadPhiInterp(path='.'):
     global phi_interp
     fname = os.path.join(path, "data/PhiIntegrals.dat")
+    os.makedirs(os.path.join(path, 'data'), exist_ok=True)
+
     xvals = np.arange(-7, 7.001, 0.05)
     phivals = np.arange(0, np.pi + 0.1, 0.05)
     xlen = len(xvals)
