@@ -74,15 +74,15 @@ def loadIsotopes(path='.'):
     rootdir = os.path.join(path, "data")
 
     # Load in Earth isotopes
-    Avals = np.loadtxt(rootdir + "isotopes.txt", usecols=(1,))
-    isotopes = np.loadtxt(rootdir + "isotopes.txt", usecols=(0,))
+    Avals = np.loadtxt(os.path.join(rootdir, "isotopes.txt"), usecols=(1,))
+    isotopes = np.loadtxt(os.path.join(rootdir, "isotopes.txt"), usecols=(0,))
     Niso = len(isotopes)  # Number of #arth isotopes
     Niso_full = Niso + 2  # Plus isotopes in atmosphere
 
     # Load density profiles for Earth isotopes
-    r_list = np.loadtxt(rootdir + "dens_profiles/n_1.dat", usecols=(0,))
+    r_list = np.loadtxt(os.path.join(rootdir, "dens_profiles", "n_1.dat"), usecols=(0,))
     r_list0 = 0.0 * r_list
-    dens_profiles = [np.loadtxt(rootdir + "dens_profiles/n_" + str(int(iso)) + ".dat", usecols=(1,))
+    dens_profiles = [np.loadtxt(os.path.join(rootdir, "dens_profiles", "n_" + str(int(iso)) + ".dat"), usecols=(1,))
                      for iso in isotopes]
 
     # Grid of heights in the atmosphere
@@ -105,7 +105,7 @@ def loadIsotopes(path='.'):
 
     # Load atmospheric parameters and
     # calculate the atmosphere density profiles...
-    Hvals, Tvals, beta = np.loadtxt(rootdir + "ISA.txt", unpack=True)
+    Hvals, Tvals, beta = np.loadtxt(os.path.join(rootdir, "ISA.txt"), unpack=True)
     Hvals *= 1e3
     beta *= 1e-3  # Get everything in m
 
