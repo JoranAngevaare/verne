@@ -22,17 +22,17 @@ from verne import MaxwellBoltzmann as MB
 # Densities are in number/cm^3
 # Distances in m
 # --------------------
-if __name__ == '__main__':
-    print("*********************************************")
-    print("WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
-    print("*********************************************")
 
-    ## Integrate options
-    MXSTEPS = 15
-    RTOL = 1.e-1
+print("*********************************************")
+print("WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
+print("*********************************************")
 
-    # MXSTEPS=1000, RTOL=1e-6
-    print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
+## Integrate options
+MXSTEPS = 15
+RTOL = 1.e-1
+
+# MXSTEPS=1000, RTOL=1e-6
+print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
 
 isotopes = None
 dens_profiles = None

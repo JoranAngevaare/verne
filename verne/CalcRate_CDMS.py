@@ -1,12 +1,11 @@
 import numpy as np
 from numpy import pi
 from scipy.integrate import simps, quad
-import verne
+from verne import MaxwellBoltzmann as MB
 from .LabFuncs import *
 from . import utils
 from scipy.special import erf
 from scipy.interpolate import interp1d
-from verne import MaxwellBoltzmann as MB
 import argparse
 import os.path
 

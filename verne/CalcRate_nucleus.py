@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import pi
 from scipy.integrate import simps, quad
-import verne
 from .LabFuncs import *
 from .utils import *
 from scipy.special import erf
