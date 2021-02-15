@@ -14,6 +14,7 @@ from scipy.interpolate import interp1d, interp2d
 from scipy.integrate import odeint
 import scipy.special
 from verne import MaxwellBoltzmann as MB
+import os
 
 # --------------------
 # Theta = 0 is directly from BELOW, angles in radians
@@ -70,7 +71,7 @@ def loadIsotopes(path='.'):
     global Niso
     global Niso_full
 
-    rootdir = path + "/../data/"
+    rootdir = os.path.join(path, "data")
 
     # Load in Earth isotopes
     Avals = np.loadtxt(rootdir + "isotopes.txt", usecols=(1,))
