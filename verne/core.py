@@ -71,7 +71,7 @@ def loadIsotopes(path='.'):
     global Niso
     global Niso_full
 
-    rootdir = os.path.join(path, "data")
+    rootdir = os.path.join(path, "..", "data")
 
     # Load in Earth isotopes
     Avals = np.loadtxt(os.path.join(rootdir, "isotopes.txt"), usecols=(1,))
