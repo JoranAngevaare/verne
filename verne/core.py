@@ -144,12 +144,17 @@ def atmos_density(h, Hvals, Tvals, beta):
     H = R_E * h / (R_E + h)
     if (H > 80000.0):
         return 0
-    R = 287.05
-    p0 = 1.01e5
-    g = 9.807
 
     # determine the layer
     ib = np.digitize(H, Hvals, right=False) - 1
+    return _atmos_density(H, Hvals, Tvals, beta, ib)
+
+
+@numba.njit
+def _atmos_density(H, Hvals, Tvals, beta, ib):
+    R = 287.05
+    p0 = 1.01e5
+    g = 9.807
 
     if (ib == 0):
         return 0
@@ -167,13 +172,12 @@ def atmos_density(h, Hvals, Tvals, beta):
         else:
             p *= (1.0 + beta[ib] * (H - Hvals[ib]) / Tvals[ib]) ** (-g / (beta[ib] * R))
     n = 1e-6 * 6.022e23 * p / (8314.32e-3 * Tvals[ib])  # Air particles per cubic cm
-
     return n
 
 
 # Path length [m], as measured from the top of the atmosphere to the detector
 # (at 'depth' m underground)
-@numba.jit()
+@numba.njit()
 def pathLength(depth, theta):
     r_det = R_E - depth
     return +np.cos(theta) * r_det + np.sqrt(
@@ -182,6 +186,7 @@ def pathLength(depth, theta):
 
 # Path length [m], as measured from the Earth's surface to the detector
 # (at 'depth' m underground)
+@numba.njit()
 def pathLength_Earth(depth, theta):
     r_det = R_E - depth
     return +np.cos(theta) * r_det + np.sqrt(
@@ -192,6 +197,7 @@ def pathLength_Earth(depth, theta):
 # See Eq. (10) of the paper
 
 # Maximum recoil energy (in keV)
+@numba.njit()
 def ERmax(mX, mA, v):
     mu = mX * mA * 1.0 / (mX + mA)
     return (1e6 / (3e5 * 3e5)) * 2 * (mu * v) ** 2 / mA
@@ -199,6 +205,7 @@ def ERmax(mX, mA, v):
 
 # Calculate the spin-independent form factor
 # for nucleon number A0 and recoil energy E
+@numba.njit()
 def calcSIFormFactor(E, A0):
     # Helm
     if (E < 1e-5):
@@ -225,12 +232,17 @@ def calcSIFormFactor(E, A0):
     return (F ** 2) * (np.exp(-(q2 * s) ** 2))
 
 
+@numba.njit()
+def integrant_SIFormFactor(x, m_x, A0, v):
+    return 2.0 * x * calcSIFormFactor(x * ERmax(m_x, 0.9315 * A0, v), A0)
+
+
 def calcFFcorrection(m_x, A0):
     v_vals = np.linspace(0, 1000, 200)
     corr_fact = v_vals * 0.0
     for i, v in enumerate(v_vals):
         corr_fact[i] = \
-        quad(lambda x: 2.0 * x * calcSIFormFactor(x * ERmax(m_x, 0.9315 * A0, v), A0), 0, 1)[0]
+        quad(lambda x: integrant_SIFormFactor(x, m_x, A0, v), 0, 1)[0]
     corr_fact[0] = 1.0
 
     if (NEGLECT_FF):
@@ -242,6 +254,7 @@ def calcFFcorrection(m_x, A0):
 
 # Calculate the DM-nucleus 'effective' cross section
 # which takes into account the average energy loss
+@numba.njit
 def effectiveXS(sigma_p, m_X, A, v=1.0):
     m_p = 0.9315  # Proton mass
     m_A = 0.9315 * A
@@ -275,24 +288,20 @@ def CalcF(vf, gamma, depth, sigma_p, m_x, target, vmax_interp):
 
 # Integrand for calculating the final speed distribution at the detector
 def f_integrand_full(vf, theta, gamma, depth, sigma_p, m_x, target):
-    # Calculate the initial velocity corresponding to this final velocity vf
     dv = 1.5
     vi1 = calcVinitial_full(vf + dv / 2.0, theta, depth, sigma_p, m_x, target)
     vi2 = calcVinitial_full(vf - dv / 2.0, theta, depth, sigma_p, m_x, target)
-
     # Calculate the average and the numerical derivative
     vi = (vi1 + vi2) / 2.0
     dvi_by_dvf = np.abs(vi1 - vi2) * 1.0 / dv
-
     return (dvi_by_dvf) * np.sin(theta) * (vi ** 2) * MB.calcf_integ(vi, theta, gamma)
-
 
 # Calculate the distance of a point from the centre of the Earth
 # The point is defined by:
 #   - theta, the angle of the trajectory
 #   - depth,the detector depth
 #   - D, the distance along the trajectory, starting at the top of the atmosphere
-# @numba.jit()
+@numba.njit()
 def radius(D, theta, depth):
     # print(type(D), type(theta), type(depth))
     r_det = R_E - depth
@@ -302,7 +311,6 @@ def radius(D, theta, depth):
 
 # Derivative of DM speed along path length D
 # To be used by the ODE integrator
-# @numba.jit(nopython = True)
 def dv_by_dD(v, D, params):
     theta, depth, sigma_p, m_x, target = params
     res = 0.0
@@ -324,6 +332,26 @@ def dv_by_dD(v, D, params):
     # BJK!
     for i in isovals:
         res += dens_interp[i](r) * effectiveXS(sigma_p, m_x, Avals[i], v=v) * corr_interp[i](v)
+    return -1e2 * v * res  # (km/s)/m
+
+
+def get_isovals(target):
+    isovals = {
+        'atmos': (8, 9),
+        'earth': range(Niso),
+    }.get(target, range(Niso_full))
+    return np.array(isovals, np.int16)
+
+
+def dv_by_dD_numba(v, D, theta, depth, sigma_p, m_x, isovals):
+    res = 0.0
+    r = radius(D, theta, depth)
+    # Loop over the relevant isotopes
+    # BJK!
+    for i in isovals:
+        fact = effectiveXS(sigma_p, m_x, Avals[i], v=v)
+        fact2 = corr_interp[i](v)
+        res += dens_interp[i](r) * fact  * fact2
     return -1e2 * v * res  # (km/s)/m
 
 
@@ -364,7 +392,8 @@ def calcVfinal(vi, theta, depth, sigma_p, m_x, target="full"):
         d1 = pathLength(depth, theta) - pathLength_Earth(depth, theta)
         d2 = pathLength(depth, theta)
 
-    psoln = odeint(dv_by_dD, vi, [d1, d2], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
+    # psoln = odeint(dv_by_dD, vi, [d1, d2], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
+    psoln = odeint(dv_by_dD_numba, vi, [d1, d2], args=(*params[:-1], get_isovals(target)), mxstep=MXSTEPS, rtol=RTOL)
     vf = psoln[1]
     return vf
 
@@ -405,7 +434,8 @@ def calcVinitial(vf, theta, depth, sigma_p, m_x, target="earth"):
         d1 = pathLength(depth, theta) - pathLength_Earth(depth, theta)
         d2 = pathLength(depth, theta)
 
-    psoln = odeint(dv_by_dD, vf, [d2, d1], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
+    # psoln = odeint(dv_by_dD, vf, [d2, d1], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
+    psoln = odeint(dv_by_dD_numba, vf, [d2, d1], args=(*params[:-1], get_isovals(target)), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
 
@@ -432,13 +462,14 @@ def calcVinitial_full(vf, theta, depth, sigma_p, m_x, target="full"):
 
 
 # Calculate final (or initial) speed after crossing the Lead shielding at SUF
+@numba.jit(nopython=True)
 def calcVfinal_shield_SUF(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 16cm of Lead
     psoln = odeint(dv_by_dD_Pb, v0, [0, 16.0e-2], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
-
+@numba.jit(nopython=True)
 def calcVinitial_shield_SUF(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 16cm of Lead (backwards)
@@ -447,13 +478,14 @@ def calcVinitial_shield_SUF(v0, sigma_p, m_x):
 
 
 # Calculate final (or initial) speed after crossing the Copper shielding at MPI
+@numba.jit(nopython=True)
 def calcVfinal_shield_MPI(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 1mm Copper
     psoln = odeint(dv_by_dD_Cu, v0, [0, 1e-3], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
-
+@numba.jit(nopython=True)
 def calcVinitial_shield_MPI(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 1mm Copper
@@ -462,13 +494,14 @@ def calcVinitial_shield_MPI(v0, sigma_p, m_x):
 
 
 # Calculate final (or initial) speed after crossing the Lead shielding at EDE...
+@numba.jit(nopython=True)
 def calcVfinal_shield_EDE(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 16cm of Lead
     psoln = odeint(dv_by_dD_Pb, v0, [0, 10.0e-2], args=(params,), mxstep=MXSTEPS, rtol=RTOL)
     return psoln[1]
 
-
+@numba.jit(nopython=True)
 def calcVinitial_shield_EDE(v0, sigma_p, m_x):
     params = [sigma_p, m_x]
     # Propagate through 16cm of Lead (backwards)

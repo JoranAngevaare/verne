@@ -71,47 +71,12 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
     vgrid_average = np.zeros(Nv)
     fgrid_average = np.zeros(Nv)
 
-    def getVelDist(gamma):
-        print("        Calculating maximum final speed...")
-        a = 1.0
-        b = 2 * v_e * (-np.sin(gamma) * np.sin(np.pi - thetavals) + np.cos(gamma) * np.cos(
-            np.pi - thetavals))
-        c = v_e ** 2 - v_esc ** 2
-        v_initial_max = (-b + np.sqrt(b ** 2 - 4 * a * c)) / (2.0 * a)
-
-        # Calculate the maximum final speed as a function of incoming angle theta
-        v_final_max = 0.0 * v_initial_max
-        for i in range(Nvals):
-            v_final_max[i] = verne.core.calcVfinal_full(v_initial_max[i], thetavals[i], depth, sigma_p,
-                                                   m_x,
-                                                   target)
-
-        # Calculate interpolation function for max final speed
-        vmax = np.max(v_final_max)
-        if (vmax < 1.0):
-            return np.linspace(0, 1, Nv), np.zeros(Nv)
-        vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False,
-                                 fill_value=0)
-
-        print("        Calculating final speed distribution...")
-
-        # Tabulate values of speed distribution
-        v_th = 1.0  # Lowest speed to consider (don't go lower than 1 km/s, other the calculation of derivatives is messed up...)
-
-        # Generate a list of sampling values for v (with some very close to v_th)
-        Nv_over_three = Nv // 3
-        vlist = np.logspace(np.log10(VMIN), np.log10(0.25 * VMAX), Nv_over_three)  # 10
-        vlist = np.append(vlist, np.linspace(0.15 * VMAX, 0.99 * VMAX, Nv - Nv_over_three))  # 20
-        vlist = np.sort(vlist)
-        f_final = 0.0 * vlist
-        for i in range(len(vlist)):
-            f_final[i] = verne.core.CalcF(vlist[i], gamma, depth, sigma_p, m_x, target, vfinal_interp)
-
-        return vlist, f_final
-
     for j in range(N_gamma):
         print("    Calculating for gamma/pi = ", gamma_list[j], "...")
-        res = getVelDist(gamma_list[j] * np.pi)
+        res = _getVelDist(gamma_list[j] * np.pi,
+                          v_e, v_esc,
+                          thetavals, Nvals, Nv, m_x, sigma_p, target, depth, VMIN, VMAX)
+
         vgrid[j, :], fgrid[j, :] = res
         vgrid_average += np.array(res[0])
         fgrid_average += np.array(res[1])
@@ -126,16 +91,54 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
     df['v_[km/s]'] = vgrid.flatten()
     df['f(v,gamma)_[s/km]'] = fgrid.flatten()
 
-    if save_as is not None and type(save_as) == str:
-        print(f'saving at {save_as}')
-        fname_avg = os.path.abspath(save_as)
-    else:
-        raise ValueError
     df_avg = pd.DataFrame()
     df_avg['v_[km/s]'] = vgrid_average
     df_avg['f(v,gamma)_[s/km]'] = fgrid_average
 
-    save_aververage_df(df_avg, fname_avg)
+    if save_as is not None and type(save_as) == str:
+        print(f'saving at {save_as}')
+        fname_avg = os.path.abspath(save_as)
+        save_aververage_df(df_avg, fname_avg)
+    else:
+        return df_avg
+
+
+def _getVelDist(gamma, v_e, v_esc, thetavals, Nvals, Nv, m_x, sigma_p, target, depth, VMIN, VMAX):
+    print("        Calculating maximum final speed...")
+    a = 1.0
+    b = 2 * v_e * (-np.sin(gamma) * np.sin(np.pi - thetavals) + np.cos(gamma) * np.cos(
+        np.pi - thetavals))
+    c = v_e ** 2 - v_esc ** 2
+    v_initial_max = (-b + np.sqrt(b ** 2 - 4 * a * c)) / (2.0 * a)
+
+    # Calculate the maximum final speed as a function of incoming angle theta
+    v_final_max = 0.0 * v_initial_max
+    for i in range(Nvals):
+        v_final_max[i] = verne.core.calcVfinal_full(v_initial_max[i], thetavals[i], depth, sigma_p,
+                                               m_x,
+                                               target)
+
+    # Calculate interpolation function for max final speed
+    vmax = np.max(v_final_max)
+    if (vmax < 1.0):
+        return np.linspace(0, 1, Nv), np.zeros(Nv)
+    vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False,
+                             fill_value=0)
+
+    print("        Calculating final speed distribution...")
+
+    # Generate a list of sampling values for v (with some very close to v_th)
+    Nv_over_three = Nv // 3
+    vlist = np.logspace(np.log10(VMIN), np.log10(0.25 * VMAX), Nv_over_three)  # 10
+    vlist = np.append(vlist, np.linspace(0.15 * VMAX, 0.99 * VMAX, Nv - Nv_over_three))  # 20
+    vlist = np.sort(vlist)
+    f_final = np.zeros(len(vlist), np.float64)
+
+    for i in range(len(vlist)):
+        f_final[i] = verne.core.CalcF(vlist[i], gamma, depth, sigma_p, m_x, target, vfinal_interp)
+
+    return vlist, f_final
+
 
 def save_aververage_df(df, save_name):
     if os.path.exists(save_name):
