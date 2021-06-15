@@ -11,6 +11,16 @@ import verne
 
 
 def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
+    df_avg = avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0)
+    if save_as is not None and type(save_as) == str:
+        print(f'saving at {save_as}')
+        fname_avg = os.path.abspath(save_as)
+    else:
+        raise ValueError
+    save_aververage_df(df_avg, fname_avg)
+
+
+def avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0):
     path = verne.__path__[0]
 
     MB.loadPhiInterp(path)
@@ -82,9 +92,13 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
         # Calculate the maximum final speed as a function of incoming angle theta
         v_final_max = 0.0 * v_initial_max
         for i in range(Nvals):
-            v_final_max[i] = verne.core.calcVfinal_full(v_initial_max[i], thetavals[i], depth, sigma_p,
-                                                   m_x,
-                                                   target)
+            v_final_max[i] = verne.core.calcVfinal_full(
+                v_initial_max[i],
+                thetavals[i],
+                depth,
+                sigma_p,
+                m_x,
+                target)
 
         # Calculate interpolation function for max final speed
         vmax = np.max(v_final_max)
@@ -96,7 +110,7 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
         print("        Calculating final speed distribution...")
 
         # Tabulate values of speed distribution
-        v_th = 1.0  # Lowest speed to consider (don't go lower than 1 km/s, other the calculation of derivatives is messed up...)
+        # v_th = 1.0  # Lowest speed to consider (don't go lower than 1 km/s, other the calculation of derivatives is messed up...)
 
         # Generate a list of sampling values for v (with some very close to v_th)
         Nv_over_three = Nv // 3
@@ -119,23 +133,18 @@ def write_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0, save_as):
     vgrid_average /= N_gamma
     fgrid_average /= N_gamma
 
-    gamma_rep = np.repeat(gamma_list, Nv)
+    # gamma_rep = np.repeat(gamma_list, Nv)
+    # df = pd.DataFrame()
+    # df['gamma/pi'] = gamma_rep
+    # df['v_[km/s]'] = vgrid.flatten()
+    # df['f(v,gamma)_[s/km]'] = fgrid.flatten()
 
-    df = pd.DataFrame()
-    df['gamma/pi'] = gamma_rep
-    df['v_[km/s]'] = vgrid.flatten()
-    df['f(v,gamma)_[s/km]'] = fgrid.flatten()
-
-    if save_as is not None and type(save_as) == str:
-        print(f'saving at {save_as}')
-        fname_avg = os.path.abspath(save_as)
-    else:
-        raise ValueError
     df_avg = pd.DataFrame()
     df_avg['v_[km/s]'] = vgrid_average
     df_avg['f(v,gamma)_[s/km]'] = fgrid_average
 
-    save_aververage_df(df_avg, fname_avg)
+    return df_avg
+
 
 def save_aververage_df(df, save_name):
     if os.path.exists(save_name):
