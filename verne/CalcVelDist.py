@@ -42,13 +42,13 @@ def avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0):
     # if N_gamma != 11 and args.save_as != None:
     #     args.save_as = 'tmp_' + args.save_as
 
-    print("   ")
-    print("    Calculating for...")
-    print("        m_x/GeV:", m_x)
-    print("        sigma_p/cm^2:", sigma_p)
-    print("        detector at :", loc)
-    print(f'        considering {N_gamma} angles')
-    print(" ")
+    # print("   ")
+    # print("    Calculating for...")
+    # print("        m_x/GeV:", m_x)
+    # print("        sigma_p/cm^2:", sigma_p)
+    # print("        detector at :", loc)
+    # print(f'        considering {N_gamma} angles')
+    # print(" ")
 
     # Initialise verne
     verne.core.loadIsotopes(path=path)
@@ -82,7 +82,7 @@ def avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0):
     fgrid_average = np.zeros(Nv)
 
     def getVelDist(gamma):
-        print("        Calculating maximum final speed...")
+        # print("        Calculating maximum final speed...")
         a = 1.0
         b = 2 * v_e * (-np.sin(gamma) * np.sin(np.pi - thetavals) + np.cos(gamma) * np.cos(
             np.pi - thetavals))
@@ -107,7 +107,7 @@ def avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0):
         vfinal_interp = interp1d(thetavals, v_final_max, kind='linear', bounds_error=False,
                                  fill_value=0)
 
-        print("        Calculating final speed distribution...")
+        # print("        Calculating final speed distribution...")
 
         # Tabulate values of speed distribution
         # v_th = 1.0  # Lowest speed to consider (don't go lower than 1 km/s, other the calculation of derivatives is messed up...)
@@ -124,7 +124,7 @@ def avg_calcveldist(m_x, sigma_p, loc, N_gamma, v_esc, v_0):
         return vlist, f_final
 
     for j in range(N_gamma):
-        print("    Calculating for gamma/pi = ", gamma_list[j], "...")
+        # print("    Calculating for gamma/pi = ", gamma_list[j], "...")
         res = getVelDist(gamma_list[j] * np.pi)
         vgrid[j, :], fgrid[j, :] = res
         vgrid_average += np.array(res[0])
@@ -171,7 +171,7 @@ def save_aververage_df(df, save_name):
     if check_on_save():
         print(f'Dataframe written successfully')
     else:
-        print(f'ERROR in writing dataframe trying again in 5 minutes')
+        print(f'ERROR in writing dataframe trying again in 1 minutes')
         print(f'was trying to save df of len(df) = {len(df)}:\n{df}')
         time.sleep(60)
         if os.path.exists(save_name):

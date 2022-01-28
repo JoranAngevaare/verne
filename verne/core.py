@@ -24,16 +24,16 @@ import os
 # Distances in m
 # --------------------
 
-print("*********************************************")
-print("WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
-print("*********************************************")
+# print("*********************************************")
+# print("WARNING: SOME v^-4 FACTORS HAVE BEEN ADDED...")
+# print("*********************************************")
 
 ## Integrate options
 MXSTEPS = 15
 RTOL = 1.e-1
 
 # MXSTEPS=1000, RTOL=1e-6
-print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
+# print(f'Be arware. The integrateion parameters are set to MXSTEPS, RTOL =  {MXSTEPS}, {RTOL}')
 
 isotopes = None
 dens_profiles = None
